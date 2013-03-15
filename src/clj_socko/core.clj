@@ -1,19 +1,11 @@
 (ns clj-socko.core
-  (:use [okku core])
+  (:use [okku core]
+        [clj-socko util])
   (:require [clojure.string :as string])
   (:import [clj_socko ServerFactory]
-           [clojure.lang ISeq]
-           [java.io InputStream File]
-           [org.apache.commons.io IOUtils FileUtils]
            [org.jboss.netty.buffer ChannelBufferInputStream]
            [org.mashupbots.socko.events
              HttpResponseStatus HttpResponseMessage HttpRequestEvent]))
-
-(defmulti  body->bytes class)
-(defmethod body->bytes String [s] (.getBytes s))
-(defmethod body->bytes ISeq [s] (.getBytes (apply str s)))
-(defmethod body->bytes InputStream [s] (IOUtils/toByteArray s))
-(defmethod body->bytes File [f] (FileUtils/readFileToByteArray f))
 
 (defn event->request [event]
   (let [msg (.request event)
