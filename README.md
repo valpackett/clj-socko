@@ -1,10 +1,27 @@
 # clj-socko
 
-A Clojure wrapper for the [Akka](http://akka.io)-based [Socko](http://sockoweb.org) web server.
+A Clojure wrapper for the [Akka](http://akka.io)-based [Socko](http://sockoweb.org) web server.  
+Uses [Okku](https://github.com/gaverhae/okku) as the Akka wrapper.  
+
+For now, only a dumb Ring server is available.  
+Routing, streaming, websocket coming soon.
 
 ## Usage
 
-FIXME
+```clojure
+(ns your.app
+  (:use clj-socko.core)
+  (:import akka.actor.ActorSystem))
+
+(defn handler [req]
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body "{\"hello\": \"world\"}"})
+
+(def as (ActorSystem/create "as"))
+
+(run-server (ring-actor handler) as {:port 8080})
+```
 
 ## License
 
