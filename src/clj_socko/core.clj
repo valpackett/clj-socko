@@ -1,9 +1,11 @@
 (ns clj-socko.core
   (:use [okku core]
-        [clj-socko util])
+        [clj-socko util]
+        [clojure walk])
   (:require [clojure.string :as string])
-  (:import [clj_socko ServerFactory]
+  (:import [clj_socko ServerFactory Handler]
            [org.jboss.netty.buffer ChannelBufferInputStream]
+           [akka.actor ActorSystem]
            [org.mashupbots.socko.events
              HttpResponseStatus HttpResponseMessage HttpRequestEvent]))
 
@@ -40,8 +42,13 @@
         (.write socko-rsp status body ctype (ServerFactory/headersAsScala headers))
         (stop)))))
 
+(defn handler [actor]
+  (reify Handler
+    (apply [this system]
+      (spawn actor :in system))))
+
 (defn run-server
-  ([a as] (run-server a as {"port" 8088}))
-  ([a as conf]
+  ([handlers conf] (run-server handlers conf (ActorSystem/create "as")))
+  ([handlers conf system]
    (ServerFactory/runServer
-     (ServerFactory/makeServer a conf as))))
+     (ServerFactory/makeServer (stringify-keys handlers) (stringify-keys conf) system))))

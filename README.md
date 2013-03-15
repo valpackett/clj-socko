@@ -10,17 +10,14 @@ Routing, streaming, websocket coming soon.
 
 ```clojure
 (ns your.app
-  (:use clj-socko.core)
-  (:import akka.actor.ActorSystem))
+  (:use clj-socko.core))
 
-(defn handler [req]
+(defn app [req]
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body "{\"hello\": \"world\"}"})
 
-(def as (ActorSystem/create "as"))
-
-(run-server (ring-actor handler) as {:port 8080})
+(run-server {:http (handler (ring-actor app))} {:port 8080})
 ```
 
 ## License
