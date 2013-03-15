@@ -3,22 +3,24 @@
         [clj-socko util]
         [clojure walk])
   (:require [clojure.string :as string])
-  (:import [clj_socko ServerFactory Handler]
+  (:import [java.net SocketAddress]
+           [clj_socko ServerFactory Handler]
            [org.jboss.netty.buffer ChannelBufferInputStream]
+           [org.jboss.netty.channel Channel]
            [akka.actor ActorSystem]
            [org.mashupbots.socko.events
              HttpResponseStatus HttpResponseMessage HttpRequestEvent]))
 
-(defn event->request [event]
+(defn event->request [^HttpRequestEvent event]
   (let [msg (.request event)
-        chan (.channel event)
+        chan ^Channel (.channel event)
         socket-adr (.getLocalAddress chan)
         ep (.endPoint msg)
         netty-req (.nettyHttpRequest msg)
         headers (into {} (ServerFactory/headersAsJava (.headers msg)))]
     {:server-port        (.getPort socket-adr)
      :server-name        (.getHostName socket-adr)
-     :remote-addr        (-> ep .host (.split ":") first)
+     :remote-addr        (-> ^String (.host ep) (.split ":") first)
      :uri                (.path ep)
      :query-string       (.queryString ep)
      :scheme             (-> (headers "X-Scheme" "http") string/lower-case keyword)
