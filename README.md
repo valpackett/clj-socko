@@ -17,7 +17,7 @@ Routing, streaming, websocket coming soon.
    :headers {"Content-Type" "application/json"}
    :body "{\"hello\": \"world\"}"})
 
-(run-server {:http (handler (ring-actor app))} {:port 8080})
+(run-server {:http (actor-handler (ring-actor app))} {:port 8080})
 ```
 
 ## License

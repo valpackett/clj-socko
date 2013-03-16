@@ -44,7 +44,7 @@
         (.write socko-rsp status body ctype (ServerFactory/headersAsScala headers))
         (stop)))))
 
-(defn handler [actor]
+(defn actor-handler [actor]
   (reify Handler
     (apply [this system]
       (spawn actor :in system))))
