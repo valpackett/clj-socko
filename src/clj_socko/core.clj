@@ -32,25 +32,35 @@
      :body               (ChannelBufferInputStream. (.getContent netty-req))
      :keep-alive         (.isKeepAlive msg)}))
 
+(defn process-request [handler event]
+  (let [ring-rsp (-> event event->request handler)
+        status (HttpResponseStatus. (:status ring-rsp))
+        headers (:headers ring-rsp)
+        ctype (headers "Content-Type" (headers "content-type" "application/octet-stream"))
+        body (body->bytes (:body ring-rsp))
+        socko-rsp ^HttpResponseMessage (.response event)]
+    (.write socko-rsp status body ctype (ServerFactory/headersAsScala headers))))
+
+(defn async-ring-actor [handler]
+  (actor
+    (onReceive [^HttpRequestEvent event]
+      (process-request handler event)
+      (stop))))
+
 (defn ring-actor [handler]
   (actor
     (onReceive [^HttpRequestEvent event]
-      (let [ring-rsp (-> event event->request handler)
-            status (HttpResponseStatus. (:status ring-rsp))
-            headers (:headers ring-rsp)
-            ctype (headers "Content-Type" (headers "content-type" "application/octet-stream"))
-            body (body->bytes (:body ring-rsp))
-            socko-rsp ^HttpResponseMessage (.response event)]
-        (.write socko-rsp status body ctype (ServerFactory/headersAsScala headers))
-        (stop)))))
+      (future (process-request handler event))
+      (stop))))
 
-(defn actor-handler [actor]
+(defn actor-handler [a]
   (reify Handler
     (apply [this system]
-      (spawn actor :in system))))
+      (.actorOf system a))))
 
 (defn run-server
-  ([handlers conf] (run-server handlers conf (ActorSystem/create "as")))
+  ([handlers conf]
+   (run-server handlers conf (ActorSystem/create "as")))
   ([handlers conf system]
    (ServerFactory/runServer
      (ServerFactory/makeServer (stringify-keys handlers) (stringify-keys conf) system))))

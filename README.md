@@ -20,6 +20,11 @@ Routing, streaming, websocket coming soon.
 (run-server {:http (actor-handler (ring-actor app))} {:port 8080})
 ```
 
+## Performance
+
+On a completely unrealistic benchmark (instantly return a response), 2x slower than [http-kit](http://http-kit.org/).
+On a more realistic benchmark (`(Thread/sleep 75)`), about the same.
+
 ## License
 
            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE

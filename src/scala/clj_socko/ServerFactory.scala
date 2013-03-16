@@ -5,10 +5,7 @@ import org.mashupbots.socko.webserver.{WebServer,WebServerConfig}
 import org.mashupbots.socko.routes.{Routes,HttpRequest,WebSocketHandshake,WebSocketFrame}
 import org.mashupbots.socko.events.{SockoEvent,HttpResponseStatus,HttpRequestEvent}
 import akka.actor.{Props,Actor,ActorRef,ActorSystem}
-
-trait Handler {
-  def apply(system: ActorSystem): ActorRef
-}
+import akka.routing.FromConfig
 
 class NotFoundActor extends Actor {
   def receive = {
@@ -18,8 +15,13 @@ class NotFoundActor extends Actor {
   }
 }
 
+trait Handler {
+  def apply(system: ActorSystem): ActorRef
+}
+
 object NotFoundHandler extends Handler {
-  def apply(system: ActorSystem) = system.actorOf(Props[NotFoundActor])
+  def apply(system: ActorSystem) =
+    system.actorOf(Props[NotFoundActor])
 }
 
 object ServerFactory {
