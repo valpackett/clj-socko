@@ -55,8 +55,39 @@
 
 (defn actor-handler [a]
   (reify Handler
-    (apply [this system]
-      (.actorOf system a))))
+    (apply [this system req]
+      (! (.actorOf system a) req))))
+
+(defn- enumerate [s]
+  (reverse (zipmap (range 1 (inc (count s))) s)))
+
+(def ^:dynamic *socko-req* nil)
+
+(defmacro cond-handler [& body]
+  ; have to use a dynamic var because can't use the gensym outside the syntax-quote
+  (let [ydob (map (fn [[i v]] (if (odd? i) (list v '*socko-req*) v)) (enumerate body))]
+    `(reify Handler
+       (apply [this# system# req#]
+         (.tell (.actorOf system# (binding [*socko-req* req#] (cond ~@ydob))) req#)))))
+
+(defn method [m]
+  (fn [^HttpRequestEvent req]
+    (= m (-> req .request .endPoint .method string/lower-case))))
+
+(def get? (method "get"))
+(def put? (method "put"))
+(def post? (method "post"))
+(def delete? (method "delete"))
+
+(defn path [p]
+  (fn [^HttpRequestEvent req]
+    (= p (-> req .request .endPoint .path))))
+
+(defn query-string [s]
+  (fn [^HttpRequestEvent req]
+    (= s (-> req .request .endPoint .queryString))))
+
+(defn not-found? [req] true)
 
 (defn run-server
   ([handlers conf]

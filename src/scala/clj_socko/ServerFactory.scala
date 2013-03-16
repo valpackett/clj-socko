@@ -16,12 +16,12 @@ class NotFoundActor extends Actor {
 }
 
 trait Handler {
-  def apply(system: ActorSystem): ActorRef
+  def apply(system: ActorSystem, req: SockoEvent): Unit
 }
 
 object NotFoundHandler extends Handler {
-  def apply(system: ActorSystem) =
-    system.actorOf(Props[NotFoundActor])
+  def apply(system: ActorSystem, req: SockoEvent) =
+    system.actorOf(Props[NotFoundActor]) ! req
 }
 
 object ServerFactory {
@@ -39,9 +39,9 @@ object ServerFactory {
     val http_handler = handlers.get("http").getOrElse(NotFoundHandler)
     val ws_handler = handlers.get("ws").getOrElse(NotFoundHandler)
     val routes = Routes({
-      case HttpRequest(req) => http_handler(system) ! req
+      case HttpRequest(req) => http_handler(system, req)
       case WebSocketHandshake(hs) => hs.authorize()
-      case WebSocketFrame(f) => ws_handler(system) ! f
+      case WebSocketFrame(f) => ws_handler(system, f)
     })
     new WebServer(conf, routes, system)
   }
